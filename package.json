@@ -1,0 +1,27 @@
+{
+  "name": "trendpulse",
+  "version": "1.0.0",
+  "description": "Una moderna applicazione web per analizzare e visualizzare trend online.",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mirkobosetti/trendpulse.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mirkobosetti/trendpulse/issues"
+  },
+  "homepage": "https://github.com/mirkobosetti/trendpulse#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
