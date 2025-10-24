@@ -43,7 +43,7 @@ cp .env.example .env
 Modifica `.env` con le tue credenziali Supabase:
 
 ```env
-PORT=5000
+PORT=5001
 NODE_ENV=development
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -67,7 +67,7 @@ npm run dev
 npm start
 ```
 
-Il server sarà disponibile su: **http://localhost:5000**
+Il server sarà disponibile su: **http://localhost:5001**
 
 ## API Endpoints
 
@@ -124,15 +124,15 @@ Testa l'API con curl o nel browser:
 
 ```bash
 # Health check
-curl http://localhost:5000/
+curl http://localhost:5001/
 
 # Get trends
-curl http://localhost:5000/api/trends?term=React
+curl http://localhost:5001/api/trends?term=React
 ```
 
 O apri nel browser:
-- http://localhost:5000
-- http://localhost:5000/api/trends?term=TypeScript
+- http://localhost:5001
+- http://localhost:5001/api/trends?term=TypeScript
 
 ## Prossimi Step
 
@@ -159,7 +159,7 @@ O apri nel browser:
 ## Troubleshooting
 
 **Il server non si avvia:**
-- Verifica che la porta 5000 sia libera: `lsof -i :5000`
+- Verifica che la porta 5001 sia libera: `lsof -i :5001`
 - Controlla che le variabili `.env` siano configurate
 
 **Errori Supabase:**
