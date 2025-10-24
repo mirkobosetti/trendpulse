@@ -21,7 +21,20 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
   process.exit(1)
 }
 
-// Crea e esporta il client Supabase
-export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+// Crea e esporta il client Supabase con schema cache disabled
+export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  db: {
+    schema: 'public'
+  },
+  auth: {
+    autoRefreshToken: true,
+    persistSession: false
+  },
+  global: {
+    headers: {
+      'Prefer': 'return=representation'
+    }
+  }
+})
 
 console.log('✅ Supabase client configurato correttamente')
