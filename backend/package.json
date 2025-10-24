@@ -16,14 +16,19 @@
     "db:push": "npx supabase db push --linked",
     "db:status": "npx supabase migration list --linked"
   },
-  "keywords": ["trends", "api", "express"],
+  "keywords": [
+    "trends",
+    "api",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.39.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "@supabase/supabase-js": "^2.39.0"
+    "express": "^4.18.2",
+    "google-trends-api": "^4.9.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",

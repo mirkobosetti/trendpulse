@@ -1,73 +1,231 @@
 /**
  * Trends Routes
  *
- * Gestisce gli endpoint per l'analisi dei trend.
- * Al momento restituisce dati mock, in futuro integrerà API esterne.
+ * Handles trend analysis endpoints with Google Trends API integration.
+ * Includes intelligent caching and search logging.
  */
 
 import express from 'express'
-// import { supabase } from '../services/supabaseClient.js'
+import { supabase } from '../services/supabaseClient.js'
+import { fetchInterestOverTime, calculateTrendStats } from '../services/googleTrendsService.js'
 
 const router = express.Router()
 
+// Cache duration in hours (24 hours = 1 day)
+const CACHE_DURATION_HOURS = 24
+
 /**
- * GET /api/trends?term=keyword
+ * GET /api/trends?term=keyword&geo=US
  *
- * Restituisce dati di trend per una keyword specifica.
- * Esempio: GET /api/trends?term=React
+ * Returns trend data for a specific keyword from Google Trends.
+ * Uses cached data if available and recent, otherwise fetches fresh data.
  *
  * Query params:
- *   - term: la keyword da analizzare
+ *   - term: the keyword to analyze (required)
+ *   - geo: geographic location code (optional, default: '' for worldwide)
  *
  * Response:
  *   {
  *     "term": "React",
+ *     "geo": "",
  *     "interest": [
- *       { "date": "2025-10-01", "score": 78 },
- *       { "date": "2025-10-02", "score": 82 }
- *     ]
+ *       { "date": "2025-10-01", "value": 78 },
+ *       { "date": "2025-10-02", "value": 82 }
+ *     ],
+ *     "stats": {
+ *       "avg_score": 75,
+ *       "max_score": 95,
+ *       "min_score": 58,
+ *       "delta_7d": 5
+ *     },
+ *     "cached": false
  *   }
  */
-router.get('/', (req, res) => {
-  const { term } = req.query
+router.get('/', async (req, res) => {
+  const { term, geo = '' } = req.query
 
-  // Validazione: verifica che il parametro 'term' sia presente
+  // Validation
   if (!term) {
     return res.status(400).json({
       error: 'Missing required parameter: term',
-      example: '/api/trends?term=React'
+      example: '/api/trends?term=React&geo=US'
     })
   }
 
-  // Dati mock per testing
-  // TODO: sostituire con chiamate a Google Trends API o Supabase
-  const mockData = {
-    term: term,
-    interest: generateMockTrendData()
-  }
+  try {
+    // 1️⃣ Log the search (analytics)
+    await logSearch(term, geo, null) // user_id = null for now (no auth yet)
 
-  res.json(mockData)
+    // 2️⃣ Check cache first
+    const cachedSnapshot = await getCachedSnapshot(term, geo)
+
+    if (cachedSnapshot) {
+      console.log(`✅ Cache HIT for "${term}" (${geo || 'worldwide'})`)
+      return res.json({
+        term,
+        geo,
+        interest: cachedSnapshot.data,
+        stats: {
+          avg_score: cachedSnapshot.avg_score,
+          max_score: cachedSnapshot.max_score,
+          min_score: cachedSnapshot.min_score,
+          delta_7d: cachedSnapshot.delta_7d
+        },
+        cached: true,
+        cached_at: cachedSnapshot.captured_at
+      })
+    }
+
+    // 3️⃣ Cache MISS - fetch from Google Trends
+    console.log(`❌ Cache MISS for "${term}" (${geo || 'worldwide'}) - fetching from Google Trends...`)
+    const timelineData = await fetchInterestOverTime(term, geo, 30)
+    const stats = calculateTrendStats(timelineData)
+
+    // 4️⃣ Save to cache
+    await saveSnapshot(term, geo, timelineData, stats)
+
+    // 5️⃣ Return fresh data
+    res.json({
+      term,
+      geo,
+      interest: timelineData,
+      stats,
+      cached: false
+    })
+
+  } catch (error) {
+    console.error('Error fetching trend data:', error.message)
+    res.status(500).json({
+      error: 'Failed to fetch trend data',
+      message: error.message
+    })
+  }
 })
 
 /**
- * Genera dati mock per i trend degli ultimi 30 giorni
- * Simula punteggi di interesse tra 50 e 100
+ * GET /api/trends/top-searches?limit=10
+ *
+ * Returns the most searched terms with their search counts.
+ *
+ * Query params:
+ *   - limit: number of results (default: 10, max: 50)
+ *
+ * Response:
+ *   {
+ *     "topSearches": [
+ *       { "term": "React", "count": 145 },
+ *       { "term": "TypeScript", "count": 98 }
+ *     ]
+ *   }
  */
-function generateMockTrendData() {
-  const data = []
-  const today = new Date()
+router.get('/top-searches', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 10, 50)
 
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
+  try {
+    const { data, error } = await supabase
+      .from('search_logs')
+      .select('term')
+      .order('searched_at', { ascending: false })
+      .limit(1000) // get recent searches
 
-    data.push({
-      date: date.toISOString().split('T')[0], // formato YYYY-MM-DD
-      score: Math.floor(Math.random() * 50) + 50 // score tra 50-100
+    if (error) throw error
+
+    // Count occurrences
+    const termCounts = {}
+    data.forEach(row => {
+      termCounts[row.term] = (termCounts[row.term] || 0) + 1
+    })
+
+    // Sort by count and get top N
+    const topSearches = Object.entries(termCounts)
+      .map(([term, count]) => ({ term, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+
+    res.json({ topSearches })
+  } catch (error) {
+    console.error('Error fetching top searches:', error.message)
+    res.status(500).json({
+      error: 'Failed to fetch top searches',
+      message: error.message
     })
   }
+})
 
-  return data
+/**
+ * Helper: Log a search to the database
+ */
+async function logSearch(term, geo, userId) {
+  try {
+    const { error } = await supabase
+      .from('search_logs')
+      .insert({
+        term,
+        geo,
+        user_id: userId
+      })
+
+    if (error) {
+      console.error('Error logging search:', error.message)
+    }
+  } catch (error) {
+    console.error('Error logging search:', error.message)
+  }
+}
+
+/**
+ * Helper: Get cached snapshot if available and recent
+ */
+async function getCachedSnapshot(term, geo) {
+  try {
+    const cacheThreshold = new Date()
+    cacheThreshold.setHours(cacheThreshold.getHours() - CACHE_DURATION_HOURS)
+
+    const { data, error } = await supabase
+      .from('trend_snapshots')
+      .select('*')
+      .eq('term', term)
+      .eq('geo', geo)
+      .gte('captured_at', cacheThreshold.toISOString())
+      .order('captured_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+      console.error('Error fetching cache:', error.message)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching cache:', error.message)
+    return null
+  }
+}
+
+/**
+ * Helper: Save trend snapshot to cache
+ */
+async function saveSnapshot(term, geo, timelineData, stats) {
+  try {
+    const { error } = await supabase
+      .from('trend_snapshots')
+      .insert({
+        term,
+        geo,
+        avg_score: stats.avg_score,
+        max_score: stats.max_score,
+        min_score: stats.min_score,
+        delta_7d: stats.delta_7d,
+        data: timelineData
+      })
+
+    if (error) {
+      console.error('Error saving snapshot:', error.message)
+    }
+  } catch (error) {
+    console.error('Error saving snapshot:', error.message)
+  }
 }
 
 export default router

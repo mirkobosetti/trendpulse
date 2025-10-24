@@ -46,8 +46,35 @@ export default function TrendChart({ data }: TrendChartProps) {
             Trend: {data.term}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Dati degli ultimi 30 giorni (mock data)
+            {data.geo ? `Geographic: ${data.geo}` : 'Worldwide'} • Last 30 days
+            {data.cached && (
+              <span className="ml-2 text-blue-600">
+                (Cached data from {new Date(data.cached_at || '').toLocaleString()})
+              </span>
+            )}
           </p>
+          {data.stats && (
+            <div className="mt-3 grid grid-cols-4 gap-4 text-center">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <div className="text-xs text-gray-600">Avg Score</div>
+                <div className="text-lg font-bold text-blue-600">{data.stats.avg_score}</div>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-xs text-gray-600">Max Score</div>
+                <div className="text-lg font-bold text-green-600">{data.stats.max_score}</div>
+              </div>
+              <div className="bg-orange-50 rounded-lg p-3">
+                <div className="text-xs text-gray-600">Min Score</div>
+                <div className="text-lg font-bold text-orange-600">{data.stats.min_score}</div>
+              </div>
+              <div className={`rounded-lg p-3 ${data.stats.delta_7d >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                <div className="text-xs text-gray-600">7-Day Change</div>
+                <div className={`text-lg font-bold ${data.stats.delta_7d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {data.stats.delta_7d >= 0 ? '+' : ''}{data.stats.delta_7d}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tabella con i dati - Placeholder prima di implementare Recharts */}
@@ -68,8 +95,8 @@ export default function TrendChart({ data }: TrendChartProps) {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {data.interest.map((point, index) => {
-                const prevScore = index > 0 ? data.interest[index - 1].score : point.score
-                const diff = point.score - prevScore
+                const prevValue = index > 0 ? data.interest[index - 1].value : point.value
+                const diff = point.value - prevValue
 
                 return (
                   <tr key={point.date} className="hover:bg-gray-50">
@@ -85,11 +112,11 @@ export default function TrendChart({ data }: TrendChartProps) {
                         <div className="w-16 bg-gray-200 rounded-full h-2 mr-3">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${point.score}%` }}
+                            style={{ width: `${point.value}%` }}
                           />
                         </div>
                         <span className="text-sm font-medium text-gray-900">
-                          {point.score}
+                          {point.value}
                         </span>
                       </div>
                     </td>

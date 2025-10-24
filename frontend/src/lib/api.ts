@@ -11,7 +11,17 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
  */
 export interface TrendDataPoint {
   date: string
-  score: number
+  value: number  // changed from 'score' to match Google Trends API
+}
+
+/**
+ * Statistiche aggregate per un trend
+ */
+export interface TrendStats {
+  avg_score: number
+  max_score: number
+  min_score: number
+  delta_7d: number
 }
 
 /**
@@ -19,7 +29,11 @@ export interface TrendDataPoint {
  */
 export interface TrendResponse {
   term: string
+  geo: string
   interest: TrendDataPoint[]
+  stats: TrendStats
+  cached: boolean
+  cached_at?: string
 }
 
 /**
