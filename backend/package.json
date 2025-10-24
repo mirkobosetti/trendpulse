@@ -6,7 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "supabase:init": "npx supabase init",
+    "supabase:login": "npx supabase login",
+    "supabase:link": "npx supabase link --project-ref eynsjarxevdieopcaoir",
+    "supabase:types": "npx supabase gen types typescript --project-id eynsjarxevdieopcaoir --schema public > database/types.ts",
+    "db:migrate:new": "npx supabase migration new",
+    "db:reset": "npx supabase db reset --linked",
+    "db:push": "npx supabase db push --linked",
+    "db:status": "npx supabase migration list --linked"
   },
   "keywords": ["trends", "api", "express"],
   "author": "",
@@ -18,6 +26,8 @@
     "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "supabase": "^2.53.6",
+    "tsx": "^4.0.0"
   }
 }
