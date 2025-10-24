@@ -9,6 +9,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import trendsRouter from './routes/trends.js'
+import favoritesRouter from './routes/favorites.js'
 
 // Carica variabili ambiente
 dotenv.config()
@@ -51,8 +52,9 @@ app.get('/', (req, res) => {
   })
 })
 
-// Mount trends router
+// Mount routers
 app.use('/api/trends', trendsRouter)
+app.use('/api/favorites', favoritesRouter)
 
 /**
  * ERROR HANDLING

@@ -78,3 +78,95 @@ export async function checkBackendHealth(): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Favorites API
+ */
+
+export interface Favorite {
+  id: string
+  user_id: string
+  term: string
+  saved_at: string
+}
+
+export async function getFavorites(token: string): Promise<Favorite[]> {
+  const response = await fetch(`${API_URL}/api/favorites`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch favorites')
+  }
+
+  const data = await response.json()
+  return data.favorites
+}
+
+export async function addFavorite(term: string, token: string): Promise<Favorite> {
+  const response = await fetch(`${API_URL}/api/favorites`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ term })
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to add favorite')
+  }
+
+  const data = await response.json()
+  return data.favorite
+}
+
+export async function removeFavorite(id: string, token: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/favorites/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to remove favorite')
+  }
+}
+
+export async function checkIsFavorite(term: string, token: string): Promise<{ isFavorite: boolean; favoriteId?: string }> {
+  const response = await fetch(`${API_URL}/api/favorites/check/${encodeURIComponent(term)}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to check favorite')
+  }
+
+  return await response.json()
+}
+
+/**
+ * Top Searches API
+ */
+
+export interface TopSearch {
+  term: string
+  count: number
+}
+
+export async function getTopSearches(limit: number = 10): Promise<TopSearch[]> {
+  const response = await fetch(`${API_URL}/api/trends/top-searches?limit=${limit}`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch top searches')
+  }
+
+  const data = await response.json()
+  return data.topSearches
+}
