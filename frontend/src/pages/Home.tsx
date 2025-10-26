@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
 import TrendChart from '../components/TrendChart'
-import { fetchTrend, type TrendResponse } from '../lib/api'
+import LoadingSkeleton from '../components/LoadingSkeleton'
+import { fetchTrend, getRecentSearches, type TrendResponse, type RecentSearch } from '../lib/api'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [trendsData, setTrendsData] = useState<TrendResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
+  const { session } = useAuth()
 
   useEffect(() => {
     const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
@@ -17,15 +21,40 @@ export default function Home() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    if (session?.access_token) {
+      loadRecentSearches()
+    } else {
+      setRecentSearches([])
+    }
+  }, [session])
+
+  const loadRecentSearches = async () => {
+    if (!session?.access_token) return
+
+    try {
+      const searches = await getRecentSearches(session.access_token, 8)
+      setRecentSearches(searches)
+    } catch (err) {
+      console.error('Failed to load recent searches:', err)
+    }
+  }
+
   const handleSearch = async (terms: string[]) => {
     setLoading(true)
     setError(null)
 
     try {
-      const promises = terms.map(term => fetchTrend(term))
+      const token = session?.access_token
+      const promises = terms.map(term => fetchTrend(term, token))
       const results = await Promise.all(promises)
       setTrendsData(results)
       setSearchParams({ search: terms.join(',') }, { replace: true })
+
+      // Reload recent searches after new search
+      if (token) {
+        setTimeout(loadRecentSearches, 500)
+      }
     } catch (err: any) {
       setError(err.message)
       setTrendsData([])
@@ -45,7 +74,7 @@ export default function Home() {
         </p>
       </div>
 
-      <SearchBar onSearch={handleSearch} loading={loading} />
+      <SearchBar onSearch={handleSearch} loading={loading} recentSearches={recentSearches} />
 
       {error && (
         <div className="mt-8 max-w-5xl mx-auto">
@@ -56,7 +85,7 @@ export default function Home() {
         </div>
       )}
 
-      <TrendChart data={trendsData} />
+      {loading ? <LoadingSkeleton /> : <TrendChart data={trendsData} />}
     </div>
   )
 }

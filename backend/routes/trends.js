@@ -53,8 +53,19 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    // 1️⃣ Log the search (analytics)
-    await logSearch(term, geo, null) // user_id = null for now (no auth yet)
+    // 1️⃣ Log the search (analytics) - extract user_id from token if present
+    let userId = null
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user } } = await supabase.auth.getUser(token)
+        if (user) userId = user.id
+      } catch (e) {
+        // Ignore auth errors for logging
+      }
+    }
+    await logSearch(term, geo, userId)
 
     // 2️⃣ Check cache first
     const cachedSnapshot = await getCachedSnapshot(term, geo)
@@ -147,6 +158,75 @@ router.get('/top-searches', async (req, res) => {
     console.error('Error fetching top searches:', error.message)
     res.status(500).json({
       error: 'Failed to fetch top searches',
+      message: error.message
+    })
+  }
+})
+
+/**
+ * GET /api/trends/recent-searches?limit=10
+ *
+ * Returns recent unique searches for the authenticated user.
+ *
+ * Headers:
+ *   - Authorization: Bearer <token> (required)
+ *
+ * Query params:
+ *   - limit: number of results (default: 10, max: 20)
+ *
+ * Response:
+ *   {
+ *     "recentSearches": [
+ *       { "term": "React", "searched_at": "2025-10-26T10:30:00Z" },
+ *       { "term": "Vue", "searched_at": "2025-10-26T09:15:00Z" }
+ *     ]
+ *   }
+ */
+router.get('/recent-searches', async (req, res) => {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const limit = Math.min(parseInt(req.query.limit) || 10, 20)
+
+  try {
+    // Verify token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Invalid token' })
+    }
+
+    // Get recent searches for this user
+    const { data, error } = await supabase
+      .from('search_logs')
+      .select('term, searched_at')
+      .eq('user_id', user.id)
+      .order('searched_at', { ascending: false })
+      .limit(100) // get more to filter duplicates
+
+    if (error) throw error
+
+    // Remove duplicates, keep most recent
+    const uniqueSearches = []
+    const seenTerms = new Set()
+
+    for (const search of data) {
+      if (!seenTerms.has(search.term)) {
+        seenTerms.add(search.term)
+        uniqueSearches.push(search)
+      }
+      if (uniqueSearches.length >= limit) break
+    }
+
+    res.json({ recentSearches: uniqueSearches })
+  } catch (error) {
+    console.error('Error fetching recent searches:', error.message)
+    res.status(500).json({
+      error: 'Failed to fetch recent searches',
       message: error.message
     })
   }

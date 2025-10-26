@@ -40,16 +40,24 @@ export interface TrendResponse {
  * Fetcha i dati di trend per una keyword dal backend
  *
  * @param term - La keyword da cercare (es. "React", "TypeScript")
+ * @param token - Optional auth token to log search with user_id
  * @returns Promise con i dati del trend
  * @throws Error se la richiesta fallisce
  */
-export async function fetchTrend(term: string): Promise<TrendResponse> {
+export async function fetchTrend(term: string, token?: string): Promise<TrendResponse> {
   if (!term || term.trim() === '') {
     throw new Error('Il termine di ricerca non può essere vuoto')
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}`)
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}`, {
+      headers
+    })
 
     if (!response.ok) {
       throw new Error(`Errore HTTP: ${response.status} ${response.statusText}`)
@@ -169,4 +177,28 @@ export async function getTopSearches(limit: number = 10): Promise<TopSearch[]> {
 
   const data = await response.json()
   return data.topSearches
+}
+
+/**
+ * Recent Searches API
+ */
+
+export interface RecentSearch {
+  term: string
+  searched_at: string
+}
+
+export async function getRecentSearches(token: string, limit: number = 10): Promise<RecentSearch[]> {
+  const response = await fetch(`${API_URL}/api/trends/recent-searches?limit=${limit}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch recent searches')
+  }
+
+  const data = await response.json()
+  return data.recentSearches
 }
