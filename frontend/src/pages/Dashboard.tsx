@@ -1,35 +1,35 @@
-import { useState, useEffect } from 'react'
-import { getTopSearches, type TopSearch } from '../lib/api'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { getTopSearches, type TopSearch } from "../lib/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const [topSearches, setTopSearches] = useState<TopSearch[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [topSearches, setTopSearches] = useState<TopSearch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadTopSearches()
-  }, [])
+    loadTopSearches();
+  }, []);
 
   const loadTopSearches = async () => {
     try {
-      setLoading(true)
-      const data = await getTopSearches(20)
-      setTopSearches(data)
-      setError(null)
+      setLoading(true);
+      const data = await getTopSearches(20);
+      setTopSearches(data);
+      setError(null);
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSearch = (term: string) => {
-    navigate(`/?search=${encodeURIComponent(term)}`)
-  }
+    navigate(`/?search=${encodeURIComponent(term)}`);
+  };
 
-  const maxCount = topSearches.length > 0 ? topSearches[0].count : 1
+  const maxCount = topSearches.length > 0 ? topSearches[0].count : 1;
 
   if (loading) {
     return (
@@ -39,23 +39,17 @@ export default function Dashboard() {
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Most searched trends on TrendPulse
-        </p>
+        <p className="mt-2 text-gray-600">Most searched trends on TrendPulse</p>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">{error}</div>}
 
       {topSearches.length === 0 ? (
         <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
@@ -73,26 +67,30 @@ export default function Dashboard() {
             />
           </svg>
           <h3 className="mt-4 text-lg font-medium text-gray-900">No searches yet</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Be the first to search for trends!
-          </p>
+          <p className="mt-2 text-sm text-gray-500">Be the first to search for trends!</p>
         </div>
       ) : (
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Top 20 Searched Terms
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Top 20 Searched Terms</h2>
             <div className="space-y-4">
               {topSearches.map((search, index) => (
-                <div key={search.term} className="flex items-center space-x-4">
-                  <div className="flex-shrink-0 w-8 text-right">
-                    <span className={`text-lg font-bold ${
-                      index === 0 ? 'text-yellow-500' :
-                      index === 1 ? 'text-gray-400' :
-                      index === 2 ? 'text-orange-600' :
-                      'text-gray-500'
-                    }`}>
+                <div
+                  key={search.term}
+                  className="flex items-center space-x-4"
+                >
+                  <div className="shrink-0 w-8 text-right">
+                    <span
+                      className={`text-lg font-bold ${
+                        index === 0
+                          ? "text-yellow-500"
+                          : index === 1
+                          ? "text-gray-400"
+                          : index === 2
+                          ? "text-orange-600"
+                          : "text-gray-500"
+                      }`}
+                    >
                       #{index + 1}
                     </span>
                   </div>
@@ -102,11 +100,9 @@ export default function Dashboard() {
                       className="text-left w-full"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-gray-900 hover:text-blue-600">
-                          {search.term}
-                        </span>
+                        <span className="font-medium text-gray-900 hover:text-blue-600">{search.term}</span>
                         <span className="text-sm text-gray-500">
-                          {search.count} {search.count === 1 ? 'search' : 'searches'}
+                          {search.count} {search.count === 1 ? "search" : "searches"}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
@@ -125,15 +121,12 @@ export default function Dashboard() {
       )}
 
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-2">
-          About the Dashboard
-        </h3>
+        <h3 className="text-lg font-semibold text-blue-900 mb-2">About the Dashboard</h3>
         <p className="text-sm text-blue-800">
-          This dashboard shows the most popular search terms across all TrendPulse users.
-          Click on any term to view its trend data. The data updates in real-time as users
-          perform searches.
+          This dashboard shows the most popular search terms across all TrendPulse users. Click on any term to view its
+          trend data. The data updates in real-time as users perform searches.
         </p>
       </div>
     </div>
-  )
+  );
 }
