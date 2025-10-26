@@ -56,6 +56,43 @@ export default function TrendChart({ data }: TrendChartProps) {
     }
   }
 
+  const exportCSV = () => {
+    if (!data) return
+
+    const headers = 'Date,Interest Score\n'
+    const rows = data.interest.map(p => `${p.date},${p.value}`).join('\n')
+    const csv = headers + rows
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${data.term}_trends_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportJSON = () => {
+    if (!data) return
+
+    const exportData = {
+      term: data.term,
+      geo: data.geo || 'worldwide',
+      exported_at: new Date().toISOString(),
+      stats: data.stats,
+      data: data.interest
+    }
+
+    const json = JSON.stringify(exportData, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${data.term}_trends_${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   // Se non ci sono dati, mostra placeholder
   if (!data) {
     return (
@@ -133,6 +170,20 @@ export default function TrendChart({ data }: TrendChartProps) {
                 </svg>
               </button>
             )}
+            <div className="flex gap-2">
+              <button
+                onClick={exportCSV}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={exportJSON}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Export JSON
+              </button>
+            </div>
           </div>
           {data.stats && (
             <div className="mt-3 grid grid-cols-4 gap-4 text-center">
