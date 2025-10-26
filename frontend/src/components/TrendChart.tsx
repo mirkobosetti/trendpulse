@@ -3,11 +3,20 @@ import type { TrendResponse } from '../lib/api'
 
 interface TrendChartProps {
   data: TrendResponse[]
+  dateRange?: number
 }
 
 const COLORS = ['#3b82f6', '#a855f7', '#10b981', '#f97316', '#ec4899']
 
-export default function TrendChart({ data }: TrendChartProps) {
+function formatDateRange(days: number): string {
+  if (days <= 7) return 'Last 7 days'
+  if (days <= 30) return 'Last 30 days'
+  if (days <= 90) return 'Last 90 days'
+  if (days <= 180) return 'Last 6 months'
+  return 'Last year'
+}
+
+export default function TrendChart({ data, dateRange = 30 }: TrendChartProps) {
 
   const exportCSV = () => {
     if (!data || data.length === 0) return
@@ -143,7 +152,7 @@ export default function TrendChart({ data }: TrendChartProps) {
               {data.length === 1 ? `Trend: ${data[0].term}` : 'Trends Comparison'}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Last 30 days
+              {formatDateRange(dateRange)}
               {data.length > 1 && (
                 <span className="ml-2 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                   Weighted comparison - values show relative popularity

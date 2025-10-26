@@ -41,10 +41,11 @@ export interface TrendResponse {
  *
  * @param term - La keyword da cercare (es. "React", "TypeScript")
  * @param token - Optional auth token to log search with user_id
+ * @param days - Number of days for trend data (default: 30)
  * @returns Promise con i dati del trend
  * @throws Error se la richiesta fallisce
  */
-export async function fetchTrend(term: string, token?: string): Promise<TrendResponse> {
+export async function fetchTrend(term: string, token?: string, days: number = 30): Promise<TrendResponse> {
   if (!term || term.trim() === '') {
     throw new Error('Il termine di ricerca non può essere vuoto')
   }
@@ -55,7 +56,7 @@ export async function fetchTrend(term: string, token?: string): Promise<TrendRes
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}`, {
+    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}&days=${days}`, {
       headers
     })
 
@@ -79,9 +80,10 @@ export async function fetchTrend(term: string, token?: string): Promise<TrendRes
  *
  * @param terms - Array di termini da confrontare (max 5)
  * @param token - Optional auth token to log searches with user_id
+ * @param days - Number of days for trend data (default: 30)
  * @returns Promise con array di TrendResponse pesati
  */
-export async function fetchComparison(terms: string[], token?: string): Promise<TrendResponse[]> {
+export async function fetchComparison(terms: string[], token?: string, days: number = 30): Promise<TrendResponse[]> {
   if (!terms || terms.length === 0) {
     throw new Error('Almeno un termine è richiesto')
   }
@@ -101,7 +103,7 @@ export async function fetchComparison(terms: string[], token?: string): Promise<
     const response = await fetch(`${API_URL}/api/trends/compare`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ terms, geo: '' })
+      body: JSON.stringify({ terms, geo: '', days })
     })
 
     if (!response.ok) {

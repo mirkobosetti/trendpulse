@@ -42,13 +42,14 @@ const CACHE_DURATION_HOURS = 24
  *   }
  */
 router.get('/', async (req, res) => {
-  const { term, geo = '' } = req.query
+  const { term, geo = '', days = '30' } = req.query
+  const daysNum = parseInt(days) || 30
 
   // Validation
   if (!term) {
     return res.status(400).json({
       error: 'Missing required parameter: term',
-      example: '/api/trends?term=React&geo=US'
+      example: '/api/trends?term=React&geo=US&days=30'
     })
   }
 
@@ -89,7 +90,7 @@ router.get('/', async (req, res) => {
 
     // 3️⃣ Cache MISS - fetch from Google Trends
     console.log(`❌ Cache MISS for "${term}" (${geo || 'worldwide'}) - fetching from Google Trends...`)
-    const timelineData = await fetchInterestOverTime(term, geo, 30)
+    const timelineData = await fetchInterestOverTime(term, geo, daysNum)
     const stats = calculateTrendStats(timelineData)
 
     // 4️⃣ Save to cache
@@ -123,7 +124,8 @@ router.get('/', async (req, res) => {
  * Body:
  *   {
  *     "terms": ["React", "Vue", "Angular"],
- *     "geo": "" (optional)
+ *     "geo": "" (optional),
+ *     "days": 30 (optional, default: 30)
  *   }
  *
  * Response:
@@ -140,13 +142,13 @@ router.get('/', async (req, res) => {
  *   }
  */
 router.post('/compare', async (req, res) => {
-  const { terms, geo = '' } = req.body
+  const { terms, geo = '', days = 30 } = req.body
 
   // Validation
   if (!terms || !Array.isArray(terms) || terms.length === 0) {
     return res.status(400).json({
       error: 'Missing or invalid "terms" array in request body',
-      example: { terms: ['React', 'Vue', 'Angular'], geo: '' }
+      example: { terms: ['React', 'Vue', 'Angular'], geo: '', days: 30 }
     })
   }
 
@@ -174,7 +176,7 @@ router.post('/compare', async (req, res) => {
     await Promise.all(terms.map(term => logSearch(term, geo, userId)))
 
     // Fetch comparison data (weighted/relative values)
-    const comparisonData = await fetchComparisonData(terms, geo, 30)
+    const comparisonData = await fetchComparisonData(terms, geo, days)
 
     // Transform to response format
     const comparison = terms.map(term => {

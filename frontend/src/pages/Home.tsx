@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
 import TrendChart from '../components/TrendChart'
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import DateRangeSelector from '../components/DateRangeSelector'
 import { fetchTrend, fetchComparison, getRecentSearches, type TrendResponse, type RecentSearch } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -12,12 +13,24 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
+  const [dateRange, setDateRange] = useState<number>(30)
   const { session } = useAuth()
+  const isManualChange = useRef(false)
 
   useEffect(() => {
     const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
+    const days = parseInt(searchParams.get('days') || '30')
+
+    setDateRange(days)
+
+    // Skip if this change was triggered by handleDateRangeChange
+    if (isManualChange.current) {
+      isManualChange.current = false
+      return
+    }
+
     if (searchTerms && searchTerms.length > 0) {
-      handleSearch(searchTerms)
+      handleSearch(searchTerms, days)
     }
   }, [searchParams])
 
@@ -40,9 +53,11 @@ export default function Home() {
     }
   }
 
-  const handleSearch = async (terms: string[]) => {
+  const handleSearch = async (terms: string[], days?: number) => {
     setLoading(true)
     setError(null)
+
+    const daysToUse = days ?? dateRange
 
     try {
       const token = session?.access_token
@@ -51,15 +66,15 @@ export default function Home() {
 
       if (terms.length === 1) {
         // Single term: use normal endpoint (normalized 0-100)
-        const result = await fetchTrend(terms[0], token)
+        const result = await fetchTrend(terms[0], token, daysToUse)
         results = [result]
       } else {
         // Multiple terms: use comparison endpoint (weighted/relative values)
-        results = await fetchComparison(terms, token)
+        results = await fetchComparison(terms, token, daysToUse)
       }
 
       setTrendsData(results)
-      setSearchParams({ search: terms.join(',') }, { replace: true })
+      setSearchParams({ search: terms.join(','), days: daysToUse.toString() }, { replace: true })
 
       // Reload recent searches after new search
       if (token) {
@@ -70,6 +85,15 @@ export default function Home() {
       setTrendsData([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDateRangeChange = (days: number) => {
+    setDateRange(days)
+    isManualChange.current = true
+    const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
+    if (searchTerms && searchTerms.length > 0) {
+      handleSearch(searchTerms, days)
     }
   }
 
@@ -86,6 +110,12 @@ export default function Home() {
 
       <SearchBar onSearch={handleSearch} loading={loading} recentSearches={recentSearches} />
 
+      {trendsData.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <DateRangeSelector value={dateRange} onChange={handleDateRangeChange} />
+        </div>
+      )}
+
       {error && (
         <div className="mt-8 max-w-5xl mx-auto">
           <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
@@ -95,7 +125,7 @@ export default function Home() {
         </div>
       )}
 
-      {loading ? <LoadingSkeleton /> : <TrendChart data={trendsData} />}
+      {loading ? <LoadingSkeleton /> : <TrendChart data={trendsData} dateRange={dateRange} />}
     </div>
   )
 }

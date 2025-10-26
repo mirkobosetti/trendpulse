@@ -87,7 +87,7 @@ export async function fetchComparisonData(terms, geo = '', days = 30) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    console.log(`📊 Attempting to fetch comparative Google Trends data for [${terms.join(', ')}]...`);
+    console.log(`📊 Attempting to fetch comparative Google Trends data for [${terms.join(', ')}] (${days} days)...`);
 
     const result = await googleTrends.interestOverTime({
       keyword: terms, // Pass array for comparison
