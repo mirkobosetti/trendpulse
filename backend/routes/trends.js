@@ -7,7 +7,7 @@
 
 import express from 'express'
 import { supabase } from '../services/supabaseClient.js'
-import { fetchInterestOverTime, calculateTrendStats } from '../services/googleTrendsService.js'
+import { fetchInterestOverTime, fetchComparisonData, calculateTrendStats } from '../services/googleTrendsService.js'
 
 const router = express.Router()
 
@@ -108,6 +108,94 @@ router.get('/', async (req, res) => {
     console.error('Error fetching trend data:', error.message)
     res.status(500).json({
       error: 'Failed to fetch trend data',
+      message: error.message
+    })
+  }
+})
+
+/**
+ * POST /api/trends/compare
+ *
+ * Compare multiple terms with weighted/relative values.
+ * When comparing terms, Google Trends returns values relative to each other,
+ * showing actual popularity differences (e.g., React 85, Angular 28).
+ *
+ * Body:
+ *   {
+ *     "terms": ["React", "Vue", "Angular"],
+ *     "geo": "" (optional)
+ *   }
+ *
+ * Response:
+ *   {
+ *     "comparison": [
+ *       {
+ *         "term": "React",
+ *         "geo": "",
+ *         "interest": [...],
+ *         "stats": {...}
+ *       },
+ *       ...
+ *     ]
+ *   }
+ */
+router.post('/compare', async (req, res) => {
+  const { terms, geo = '' } = req.body
+
+  // Validation
+  if (!terms || !Array.isArray(terms) || terms.length === 0) {
+    return res.status(400).json({
+      error: 'Missing or invalid "terms" array in request body',
+      example: { terms: ['React', 'Vue', 'Angular'], geo: '' }
+    })
+  }
+
+  if (terms.length > 5) {
+    return res.status(400).json({
+      error: 'Maximum 5 terms allowed for comparison'
+    })
+  }
+
+  try {
+    // Log searches for authenticated user
+    let userId = null
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user } } = await supabase.auth.getUser(token)
+        if (user) userId = user.id
+      } catch (e) {
+        // Ignore auth errors
+      }
+    }
+
+    // Log all search terms
+    await Promise.all(terms.map(term => logSearch(term, geo, userId)))
+
+    // Fetch comparison data (weighted/relative values)
+    const comparisonData = await fetchComparisonData(terms, geo, 30)
+
+    // Transform to response format
+    const comparison = terms.map(term => {
+      const interest = comparisonData[term]
+      const stats = calculateTrendStats(interest)
+
+      return {
+        term,
+        geo,
+        interest,
+        stats,
+        cached: false
+      }
+    })
+
+    res.json({ comparison })
+
+  } catch (error) {
+    console.error('Error fetching comparison data:', error.message)
+    res.status(500).json({
+      error: 'Failed to fetch comparison data',
       message: error.message
     })
   }

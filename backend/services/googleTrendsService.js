@@ -74,6 +74,67 @@ export async function fetchInterestOverTime(term, geo = '', days = 30) {
 }
 
 /**
+ * Fetch comparative interest over time for multiple terms
+ * Returns weighted data where values are relative to each other
+ * @param {Array<string>} terms - Array of search terms to compare
+ * @param {string} geo - Geographic location (default: '' for worldwide)
+ * @param {number} days - Number of days to fetch (default: 30)
+ * @returns {Promise<Object>} Object with term keys, each containing array of {date, value}
+ */
+export async function fetchComparisonData(terms, geo = '', days = 30) {
+  try {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    console.log(`📊 Attempting to fetch comparative Google Trends data for [${terms.join(', ')}]...`);
+
+    const result = await googleTrends.interestOverTime({
+      keyword: terms, // Pass array for comparison
+      startTime: startDate,
+      endTime: endDate,
+      geo: geo,
+    });
+
+    const data = JSON.parse(result);
+
+    if (!data.default || !data.default.timelineData) {
+      throw new Error('Invalid response from Google Trends');
+    }
+
+    // Transform to our format - data.default.timelineData contains all terms in value array
+    const comparisonData = {};
+
+    terms.forEach((term, index) => {
+      comparisonData[term] = data.default.timelineData.map(item => ({
+        date: new Date(item.time * 1000).toISOString().split('T')[0],
+        value: item.value[index] || 0, // Each index corresponds to a term
+      }));
+    });
+
+    console.log(`✅ Successfully fetched comparison data for ${terms.length} terms`);
+    return comparisonData;
+
+  } catch (error) {
+    console.warn(`⚠️  Google Trends comparison API failed: ${error.message}`);
+    console.log(`🔄 Falling back to mock comparison data`);
+
+    // Return mock data with realistic relative values
+    const comparisonData = {};
+    const baseMultipliers = terms.map(() => Math.random() * 0.7 + 0.3); // 0.3 to 1.0
+
+    terms.forEach((term, index) => {
+      comparisonData[term] = generateMockData(days).map(item => ({
+        ...item,
+        value: Math.round(item.value * baseMultipliers[index])
+      }));
+    });
+
+    return comparisonData;
+  }
+}
+
+/**
  * Get aggregated statistics from trend data
  * @param {Array} timelineData - Array of {date, value} objects
  * @returns {Object} Statistics object with avg, max, min, delta

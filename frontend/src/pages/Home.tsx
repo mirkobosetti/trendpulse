@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
 import TrendChart from '../components/TrendChart'
 import LoadingSkeleton from '../components/LoadingSkeleton'
-import { fetchTrend, getRecentSearches, type TrendResponse, type RecentSearch } from '../lib/api'
+import { fetchTrend, fetchComparison, getRecentSearches, type TrendResponse, type RecentSearch } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Home() {
@@ -46,8 +46,18 @@ export default function Home() {
 
     try {
       const token = session?.access_token
-      const promises = terms.map(term => fetchTrend(term, token))
-      const results = await Promise.all(promises)
+
+      let results: TrendResponse[]
+
+      if (terms.length === 1) {
+        // Single term: use normal endpoint (normalized 0-100)
+        const result = await fetchTrend(terms[0], token)
+        results = [result]
+      } else {
+        // Multiple terms: use comparison endpoint (weighted/relative values)
+        results = await fetchComparison(terms, token)
+      }
+
       setTrendsData(results)
       setSearchParams({ search: terms.join(',') }, { replace: true })
 

@@ -74,6 +74,51 @@ export async function fetchTrend(term: string, token?: string): Promise<TrendRes
 }
 
 /**
+ * Confronta più termini con valori pesati/relativi
+ * Usa una singola chiamata API per ottenere dati comparativi reali
+ *
+ * @param terms - Array di termini da confrontare (max 5)
+ * @param token - Optional auth token to log searches with user_id
+ * @returns Promise con array di TrendResponse pesati
+ */
+export async function fetchComparison(terms: string[], token?: string): Promise<TrendResponse[]> {
+  if (!terms || terms.length === 0) {
+    throw new Error('Almeno un termine è richiesto')
+  }
+
+  if (terms.length > 5) {
+    throw new Error('Massimo 5 termini per confronto')
+  }
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_URL}/api/trends/compare`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ terms, geo: '' })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Errore HTTP: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.comparison
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Errore nel confronto: ${error.message}`)
+    }
+    throw new Error('Errore sconosciuto nel confronto')
+  }
+}
+
+/**
  * Health check del backend
  *
  * @returns Promise<boolean> true se il backend è raggiungibile

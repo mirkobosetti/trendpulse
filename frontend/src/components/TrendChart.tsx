@@ -142,7 +142,14 @@ export default function TrendChart({ data }: TrendChartProps) {
             <h3 className="text-xl font-bold text-gray-900">
               {data.length === 1 ? `Trend: ${data[0].term}` : 'Trends Comparison'}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">Last 30 days</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Last 30 days
+              {data.length > 1 && (
+                <span className="ml-2 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  Weighted comparison - values show relative popularity
+                </span>
+              )}
+            </p>
             {data.length === 1 && (
               <div className="mt-4 flex gap-6">
                 <div>
