@@ -6,31 +6,29 @@ import { fetchTrend, type TrendResponse } from '../lib/api'
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [trendData, setTrendData] = useState<TrendResponse | null>(null)
+  const [trendsData, setTrendsData] = useState<TrendResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const searchTerm = searchParams.get('search')
-    if (searchTerm) {
-      handleSearch(searchTerm)
+    const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
+    if (searchTerms && searchTerms.length > 0) {
+      handleSearch(searchTerms)
     }
   }, [searchParams])
 
-  const handleSearch = async (term: string) => {
+  const handleSearch = async (terms: string[]) => {
     setLoading(true)
     setError(null)
 
     try {
-      const data = await fetchTrend(term)
-      setTrendData(data)
-      // Update URL without triggering navigation
-      if (searchParams.get('search') !== term) {
-        setSearchParams({ search: term }, { replace: true })
-      }
+      const promises = terms.map(term => fetchTrend(term))
+      const results = await Promise.all(promises)
+      setTrendsData(results)
+      setSearchParams({ search: terms.join(',') }, { replace: true })
     } catch (err: any) {
       setError(err.message)
-      setTrendData(null)
+      setTrendsData([])
     } finally {
       setLoading(false)
     }
@@ -40,10 +38,10 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold text-gray-900 mb-4">
-          Discover Global Trends
+          Compare Global Trends
         </h2>
         <p className="text-lg text-gray-600">
-          Analyze search interest over time for any topic
+          Analyze and compare up to 5 topics side by side
         </p>
       </div>
 
@@ -58,7 +56,7 @@ export default function Home() {
         </div>
       )}
 
-      <TrendChart data={trendData} />
+      <TrendChart data={trendsData} />
     </div>
   )
 }
