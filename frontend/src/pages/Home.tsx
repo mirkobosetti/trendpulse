@@ -74,6 +74,9 @@ export default function Home() {
       }
 
       setTrendsData(results)
+
+      // Mark this as manual change to prevent double-call from useEffect
+      isManualChange.current = true
       setSearchParams({ search: terms.join(','), days: daysToUse.toString() }, { replace: true })
 
       // Reload recent searches after new search
