@@ -23,11 +23,11 @@ export default function GeoSelector({ value, onChange }: GeoSelectorProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-600">Location:</span>
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 transition-colors">Location:</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-gray-400 transition-colors"
+        className="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-gray-400 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:border-gray-500"
       >
         {COUNTRIES.map(country => (
           <option key={country.code} value={country.code}>

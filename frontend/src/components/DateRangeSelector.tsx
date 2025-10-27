@@ -14,16 +14,16 @@ const DATE_RANGES = [
 export default function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-600">Time range:</span>
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 transition-colors">Time range:</span>
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg transition-colors">
         {DATE_RANGES.map(range => (
           <button
             key={range.value}
             onClick={() => onChange(range.value)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               value === range.value
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-800 dark:text-blue-400'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             {range.label}

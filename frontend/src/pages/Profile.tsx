@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
 
 export default function Profile() {
@@ -29,19 +30,19 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Account</h1>
-        <p className="text-gray-600 mt-2">Manage your profile and settings</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors">Account</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2 transition-colors">Manage your profile and settings</p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-8">
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-8 transition-colors">
         <nav className="-mb-px flex gap-8">
           <button
             onClick={() => setActiveTab('profile')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'profile'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             Profile
@@ -50,8 +51,8 @@ export default function Profile() {
             onClick={() => setActiveTab('settings')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'settings'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             Settings
@@ -63,30 +64,30 @@ export default function Profile() {
       {activeTab === 'profile' && (
         <div className="space-y-6">
           {/* Profile Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 transition-colors">Profile Information</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-                <p className="text-base text-gray-900">{user.email}</p>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-1 transition-colors">Email</label>
+                <p className="text-base text-gray-900 dark:text-gray-100 transition-colors">{user.email}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">User ID</label>
-                <p className="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded border border-gray-200 break-all">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-1 transition-colors">User ID</label>
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded border border-gray-200 dark:border-gray-600 break-all transition-colors">
                   {user.id}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Account Created</label>
-                <p className="text-base text-gray-900">{createdDate}</p>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-1 transition-colors">Account Created</label>
+                <p className="text-base text-gray-900 dark:text-gray-100 transition-colors">{createdDate}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Last Sign In</label>
-                <p className="text-base text-gray-900">{lastSignIn}</p>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-1 transition-colors">Last Sign In</label>
+                <p className="text-base text-gray-900 dark:text-gray-100 transition-colors">{lastSignIn}</p>
               </div>
             </div>
           </div>
@@ -150,12 +151,12 @@ function ChangePasswordCard() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 transition-colors">Change Password</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors">
             New Password
           </label>
           <input
@@ -164,13 +165,13 @@ function ChangePasswordCard() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             placeholder="Enter new password"
           />
         </div>
 
         <div>
-          <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors">
             Confirm New Password
           </label>
           <input
@@ -179,16 +180,16 @@ function ChangePasswordCard() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             placeholder="Confirm new password"
           />
         </div>
 
         {message && (
-          <div className={`p-3 rounded-lg ${
+          <div className={`p-3 rounded-lg transition-colors ${
             message.type === 'success'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
+              ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
           }`}>
             {message.text}
           </div>
@@ -197,7 +198,7 @@ function ChangePasswordCard() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+          className="w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
         >
           {loading ? 'Updating...' : 'Update Password'}
         </button>
@@ -207,9 +208,7 @@ function ChangePasswordCard() {
 }
 
 function SettingsTab() {
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true'
-  })
+  const { darkMode, setDarkMode } = useTheme()
 
   const [emailNotifications, setEmailNotifications] = useState(() => {
     return localStorage.getItem('emailNotifications') !== 'false'
@@ -217,13 +216,6 @@ function SettingsTab() {
 
   const handleDarkModeToggle = (enabled: boolean) => {
     setDarkMode(enabled)
-    localStorage.setItem('darkMode', enabled.toString())
-
-    if (enabled) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
   }
 
   const handleEmailNotificationsToggle = (enabled: boolean) => {
@@ -234,19 +226,19 @@ function SettingsTab() {
   return (
     <div className="space-y-6">
       {/* Appearance Settings */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Appearance</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 transition-colors">Appearance</h2>
 
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Dark Mode</h3>
-            <p className="text-sm text-gray-500 mt-1">Enable dark mode for better viewing at night</p>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">Dark Mode</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors">Enable dark mode for better viewing at night</p>
           </div>
           <button
             type="button"
             onClick={() => handleDarkModeToggle(!darkMode)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              darkMode ? 'bg-blue-600' : 'bg-gray-200'
+              darkMode ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
             }`}
           >
             <span
@@ -259,19 +251,19 @@ function SettingsTab() {
       </div>
 
       {/* Notification Settings */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 transition-colors">Notifications</h2>
 
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Email Notifications</h3>
-            <p className="text-sm text-gray-500 mt-1">Receive updates about new features and trends</p>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">Email Notifications</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors">Receive updates about new features and trends</p>
           </div>
           <button
             type="button"
             onClick={() => handleEmailNotificationsToggle(!emailNotifications)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              emailNotifications ? 'bg-blue-600' : 'bg-gray-200'
+              emailNotifications ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
             }`}
           >
             <span

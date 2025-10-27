@@ -117,10 +117,10 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 transition-colors">
           Compare Global Trends
         </h2>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-gray-600 dark:text-gray-400 transition-colors">
           Analyze and compare up to 5 topics side by side
         </p>
       </div>
@@ -136,7 +136,7 @@ export default function Home() {
 
       {error && (
         <div className="mt-8 max-w-5xl mx-auto">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 transition-colors">
             <p className="font-medium">Error loading trend data</p>
             <p className="text-sm mt-1">{error}</p>
           </div>
