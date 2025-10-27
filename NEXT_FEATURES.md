@@ -2,24 +2,6 @@
 
 ## Medium Features (3-5 hours each) 🛠️
 
-### 6. **Geographic Filtering** 🌍
-
-**Value**: High - see trends by country/region
-**Complexity**: Medium
-**What to build**:
-
-- Dropdown to select country (US, UK, IT, etc.)
-- Pass `geo` parameter to Google Trends API
-- Show country flag/name in chart
-
-**Implementation**:
-
-- Add geo selector to SearchBar
-- Update backend to pass geo to Google Trends
-- Cache includes geo in key
-
----
-
 ### 7. **Trend Alerts** 🔔
 
 **Value**: High - notify users when favorite trend changes

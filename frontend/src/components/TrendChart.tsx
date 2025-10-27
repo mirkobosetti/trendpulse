@@ -4,9 +4,40 @@ import type { TrendResponse } from '../lib/api'
 interface TrendChartProps {
   data: TrendResponse[]
   dateRange?: number
+  geo?: string
 }
 
 const COLORS = ['#3b82f6', '#a855f7', '#10b981', '#f97316', '#ec4899']
+
+const GEO_FLAGS: Record<string, string> = {
+  '': '🌍',
+  'US': '🇺🇸',
+  'GB': '🇬🇧',
+  'IT': '🇮🇹',
+  'DE': '🇩🇪',
+  'FR': '🇫🇷',
+  'ES': '🇪🇸',
+  'CA': '🇨🇦',
+  'AU': '🇦🇺',
+  'JP': '🇯🇵',
+  'BR': '🇧🇷',
+  'IN': '🇮🇳'
+}
+
+const GEO_NAMES: Record<string, string> = {
+  '': 'Worldwide',
+  'US': 'United States',
+  'GB': 'United Kingdom',
+  'IT': 'Italy',
+  'DE': 'Germany',
+  'FR': 'France',
+  'ES': 'Spain',
+  'CA': 'Canada',
+  'AU': 'Australia',
+  'JP': 'Japan',
+  'BR': 'Brazil',
+  'IN': 'India'
+}
 
 function formatDateRange(days: number): string {
   if (days <= 7) return 'Last 7 days'
@@ -16,7 +47,7 @@ function formatDateRange(days: number): string {
   return 'Last year'
 }
 
-export default function TrendChart({ data, dateRange = 30 }: TrendChartProps) {
+export default function TrendChart({ data, dateRange = 30, geo = '' }: TrendChartProps) {
 
   const exportCSV = () => {
     if (!data || data.length === 0) return
@@ -148,11 +179,12 @@ export default function TrendChart({ data, dateRange = 30 }: TrendChartProps) {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900">
-              {data.length === 1 ? `Trend: ${data[0].term}` : 'Trends Comparison'}
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span>{GEO_FLAGS[geo] || '🌍'}</span>
+              <span>{data.length === 1 ? `Trend: ${data[0].term}` : 'Trends Comparison'}</span>
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              {formatDateRange(dateRange)}
+              {formatDateRange(dateRange)} • {GEO_NAMES[geo] || 'Worldwide'}
               {data.length > 1 && (
                 <span className="ml-2 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                   Weighted comparison - values show relative popularity

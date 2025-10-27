@@ -4,6 +4,7 @@ import SearchBar from '../components/SearchBar'
 import TrendChart from '../components/TrendChart'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import DateRangeSelector from '../components/DateRangeSelector'
+import GeoSelector from '../components/GeoSelector'
 import { fetchTrend, fetchComparison, getRecentSearches, type TrendResponse, type RecentSearch } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -14,23 +15,26 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
   const [dateRange, setDateRange] = useState<number>(30)
+  const [geo, setGeo] = useState<string>('')
   const { session } = useAuth()
   const isManualChange = useRef(false)
 
   useEffect(() => {
     const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
     const days = parseInt(searchParams.get('days') || '30')
+    const geoParam = searchParams.get('geo') || ''
 
     setDateRange(days)
+    setGeo(geoParam)
 
-    // Skip if this change was triggered by handleDateRangeChange
+    // Skip if this change was triggered by manual actions
     if (isManualChange.current) {
       isManualChange.current = false
       return
     }
 
     if (searchTerms && searchTerms.length > 0) {
-      handleSearch(searchTerms, days)
+      handleSearch(searchTerms, days, geoParam)
     }
   }, [searchParams])
 
@@ -53,11 +57,12 @@ export default function Home() {
     }
   }
 
-  const handleSearch = async (terms: string[], days?: number) => {
+  const handleSearch = async (terms: string[], days?: number, geoParam?: string) => {
     setLoading(true)
     setError(null)
 
     const daysToUse = days ?? dateRange
+    const geoToUse = geoParam ?? geo
 
     try {
       const token = session?.access_token
@@ -66,18 +71,18 @@ export default function Home() {
 
       if (terms.length === 1) {
         // Single term: use normal endpoint (normalized 0-100)
-        const result = await fetchTrend(terms[0], token, daysToUse)
+        const result = await fetchTrend(terms[0], token, daysToUse, geoToUse)
         results = [result]
       } else {
         // Multiple terms: use comparison endpoint (weighted/relative values)
-        results = await fetchComparison(terms, token, daysToUse)
+        results = await fetchComparison(terms, token, daysToUse, geoToUse)
       }
 
       setTrendsData(results)
 
       // Mark this as manual change to prevent double-call from useEffect
       isManualChange.current = true
-      setSearchParams({ search: terms.join(','), days: daysToUse.toString() }, { replace: true })
+      setSearchParams({ search: terms.join(','), days: daysToUse.toString(), geo: geoToUse }, { replace: true })
 
       // Reload recent searches after new search
       if (token) {
@@ -96,7 +101,16 @@ export default function Home() {
     isManualChange.current = true
     const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
     if (searchTerms && searchTerms.length > 0) {
-      handleSearch(searchTerms, days)
+      handleSearch(searchTerms, days, geo)
+    }
+  }
+
+  const handleGeoChange = (newGeo: string) => {
+    setGeo(newGeo)
+    isManualChange.current = true
+    const searchTerms = searchParams.get('search')?.split(',').filter(Boolean)
+    if (searchTerms && searchTerms.length > 0) {
+      handleSearch(searchTerms, dateRange, newGeo)
     }
   }
 
@@ -114,7 +128,8 @@ export default function Home() {
       <SearchBar onSearch={handleSearch} loading={loading} recentSearches={recentSearches} />
 
       {trendsData.length > 0 && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-wrap justify-center gap-4">
+          <GeoSelector value={geo} onChange={handleGeoChange} />
           <DateRangeSelector value={dateRange} onChange={handleDateRangeChange} />
         </div>
       )}
@@ -128,7 +143,7 @@ export default function Home() {
         </div>
       )}
 
-      {loading ? <LoadingSkeleton /> : <TrendChart data={trendsData} dateRange={dateRange} />}
+      {loading ? <LoadingSkeleton /> : <TrendChart data={trendsData} dateRange={dateRange} geo={geo} />}
     </div>
   )
 }

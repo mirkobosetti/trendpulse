@@ -42,10 +42,11 @@ export interface TrendResponse {
  * @param term - La keyword da cercare (es. "React", "TypeScript")
  * @param token - Optional auth token to log search with user_id
  * @param days - Number of days for trend data (default: 30)
+ * @param geo - Geographic location code (default: '' for worldwide)
  * @returns Promise con i dati del trend
  * @throws Error se la richiesta fallisce
  */
-export async function fetchTrend(term: string, token?: string, days: number = 30): Promise<TrendResponse> {
+export async function fetchTrend(term: string, token?: string, days: number = 30, geo: string = ''): Promise<TrendResponse> {
   if (!term || term.trim() === '') {
     throw new Error('Il termine di ricerca non può essere vuoto')
   }
@@ -56,7 +57,7 @@ export async function fetchTrend(term: string, token?: string, days: number = 30
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}&days=${days}`, {
+    const response = await fetch(`${API_URL}/api/trends?term=${encodeURIComponent(term)}&days=${days}&geo=${geo}`, {
       headers
     })
 
@@ -81,9 +82,10 @@ export async function fetchTrend(term: string, token?: string, days: number = 30
  * @param terms - Array di termini da confrontare (max 5)
  * @param token - Optional auth token to log searches with user_id
  * @param days - Number of days for trend data (default: 30)
+ * @param geo - Geographic location code (default: '' for worldwide)
  * @returns Promise con array di TrendResponse pesati
  */
-export async function fetchComparison(terms: string[], token?: string, days: number = 30): Promise<TrendResponse[]> {
+export async function fetchComparison(terms: string[], token?: string, days: number = 30, geo: string = ''): Promise<TrendResponse[]> {
   if (!terms || terms.length === 0) {
     throw new Error('Almeno un termine è richiesto')
   }
@@ -103,7 +105,7 @@ export async function fetchComparison(terms: string[], token?: string, days: num
     const response = await fetch(`${API_URL}/api/trends/compare`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ terms, geo: '', days })
+      body: JSON.stringify({ terms, geo, days })
     })
 
     if (!response.ok) {
