@@ -2,21 +2,46 @@
 
 ## Medium Features (3-5 hours each) 🛠️
 
-### 7. **Trend Alerts** 🔔
+### 7. **Trend Alerts** 🔔 ✅ IMPLEMENTED
 
 **Value**: High - notify users when favorite trend changes
 **Complexity**: High
-**What to build**:
+**Status**: ✅ Backend completo, manca solo UI frontend
 
-- Toggle "Enable alerts" on favorites
-- Background job checks trend changes daily
-- Send email when score increases/decreases by threshold
+**What's done**:
+- ✅ Database migration con colonne alert (alert_enabled, threshold, ecc.)
+- ✅ Tabella alert_logs per storico notifiche
+- ✅ Supabase Edge Function per check automatici
+- ✅ Email HTML template con Resend
+- ✅ RLS policies per sicurezza
+- ✅ Documentazione completa setup
 
 **Tech Stack**:
+- ✅ Supabase Edge Functions (Deno/TypeScript)
+- ✅ pg_cron per scheduler (free, incluso in Supabase)
+- ✅ Resend per email (3k gratis/mese)
+- ✅ Alert logs in PostgreSQL
 
-- Cron job or Supabase Edge Functions
-- SendGrid or Resend for emails
-- Store alert preferences in database
+**Setup**:
+```bash
+# Quick setup
+cd backend/supabase
+./ALERTS_QUICKSTART.sh
+
+# Or manual (full guide in ALERTS_SETUP.md)
+supabase db push
+supabase functions deploy check-trend-alerts
+supabase secrets set RESEND_API_KEY=re_your_key
+```
+
+**TODO Frontend** (1-2 ore):
+- [ ] Aggiungere tab "Alerts" in Profile page
+- [ ] Toggle per abilitare alert su ogni favorite
+- [ ] Slider per threshold (default 20%)
+- [ ] Dropdown per frequenza (daily/6h/hourly)
+- [ ] Mostra ultimi alert ricevuti (da alert_logs)
+
+**Costi**: $0/mese fino a 500+ utenti (tutto free tier) 🎉
 
 ---
 

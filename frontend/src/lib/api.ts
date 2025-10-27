@@ -145,6 +145,12 @@ export interface Favorite {
   user_id: string
   term: string
   saved_at: string
+  alert_enabled?: boolean
+  alert_threshold?: number
+  alert_frequency?: 'daily' | '6hours' | 'hourly'
+  last_check_score?: number
+  last_check_at?: string
+  geo?: string
 }
 
 export async function getFavorites(token: string): Promise<Favorite[]> {
@@ -250,4 +256,60 @@ export async function getRecentSearches(token: string, limit: number = 10): Prom
 
   const data = await response.json()
   return data.recentSearches
+}
+
+/**
+ * Alerts API
+ */
+
+export interface AlertLog {
+  id: string
+  user_id: string
+  favorite_id: string
+  term: string
+  geo: string
+  old_score: number
+  new_score: number
+  change_percent: number
+  alert_type: 'threshold' | 'spike' | 'drop'
+  email_sent: boolean
+  sent_at: string
+}
+
+export async function updateAlertSettings(
+  favoriteId: string,
+  settings: {
+    alert_enabled: boolean
+    alert_threshold?: number
+    alert_frequency?: 'daily' | '6hours' | 'hourly'
+  },
+  token: string
+): Promise<void> {
+  const response = await fetch(`${API_URL}/api/favorites/${favoriteId}/alerts`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(settings)
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update alert settings')
+  }
+}
+
+export async function getAlertLogs(token: string, limit: number = 20): Promise<AlertLog[]> {
+  const response = await fetch(`${API_URL}/api/favorites/alerts/logs?limit=${limit}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch alert logs')
+  }
+
+  const data = await response.json()
+  return data.logs
 }

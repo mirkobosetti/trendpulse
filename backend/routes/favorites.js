@@ -171,4 +171,71 @@ router.get('/check/:term', authenticateUser, async (req, res) => {
   }
 })
 
+/**
+ * PATCH /api/favorites/:id/alerts
+ *
+ * Update alert settings for a favorite
+ * Body: { alert_enabled: boolean, alert_threshold?: number, alert_frequency?: string }
+ */
+router.patch('/:id/alerts', authenticateUser, async (req, res) => {
+  const { id } = req.params
+  const { alert_enabled, alert_threshold, alert_frequency } = req.body
+
+  if (alert_enabled === undefined) {
+    return res.status(400).json({ error: 'Missing required field: alert_enabled' })
+  }
+
+  try {
+    const updateData = { alert_enabled }
+
+    if (alert_threshold !== undefined) {
+      updateData.alert_threshold = alert_threshold
+    }
+
+    if (alert_frequency !== undefined) {
+      updateData.alert_frequency = alert_frequency
+    }
+
+    const { data, error } = await supabase
+      .from('user_favorites')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', req.user.id) // Ensure user owns this favorite
+      .select()
+      .single()
+
+    if (error) throw error
+
+    res.json({ favorite: data })
+  } catch (error) {
+    console.error('Error updating alert settings:', error.message)
+    res.status(500).json({ error: 'Failed to update alert settings' })
+  }
+})
+
+/**
+ * GET /api/favorites/alerts/logs
+ *
+ * Get alert logs for the authenticated user
+ */
+router.get('/alerts/logs', authenticateUser, async (req, res) => {
+  const limit = parseInt(req.query.limit) || 20
+
+  try {
+    const { data, error } = await supabase
+      .from('alert_logs')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('sent_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+
+    res.json({ logs: data })
+  } catch (error) {
+    console.error('Error fetching alert logs:', error.message)
+    res.status(500).json({ error: 'Failed to fetch alert logs' })
+  }
+})
+
 export default router
